@@ -33,7 +33,7 @@ MainFrame.Position = UDim2.new(0.5, -130, 0.2, 0)
 MainFrame.Active = true; MainFrame.Draggable = true
 
 Title.Parent = MainFrame; Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Text = "VORTEX V9.4: DOMINATOR"; Title.TextColor3 = Color3.new(1,1,1)
+Title.Text = "VORTEX V9:DOMINATOR"; Title.TextColor3 = Color3.new(1,1,1)
 Title.BackgroundColor3 = Color3.fromRGB(138, 43, 226); Title.Font = Enum.Font.SourceSansBold
 
 CloseBtn.Parent = MainFrame; CloseBtn.Size = UDim2.new(0, 30, 0, 30); CloseBtn.Position = UDim2.new(1, -35, 0, 5)
