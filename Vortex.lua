@@ -1,4 +1,4 @@
--- VORTEX DOMINATOR V9.2 - FE FLING & TAG SYSTEM
+-- VORTEX DOMINATOR V9.3 - SUPER SPIN FLING UPDATE
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local OpenBtn = Instance.new("TextButton")
@@ -10,7 +10,7 @@ local UIList = Instance.new("UIListLayout")
 
 -- [ SETUP DA SCREEN ]
 ScreenGui.Parent = game.CoreGui
-ScreenGui.Name = "VortexDominatorV9_2"
+ScreenGui.Name = "VortexDominatorV9_3"
 
 -- [ BOTÃO FLUTUANTE ]
 OpenBtn.Parent = ScreenGui
@@ -27,7 +27,7 @@ MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
 MainFrame.BorderSizePixel = 2
 MainFrame.BorderColor3 = Color3.fromRGB(138, 43, 226)
-MainFrame.Size = UDim2.new(0, 260, 0, 540) -- Aumentado para o novo botão
+MainFrame.Size = UDim2.new(0, 260, 0, 540)
 MainFrame.Position = UDim2.new(0.5, -130, 0.2, 0)
 MainFrame.Active = true; MainFrame.Draggable = true
 
@@ -86,17 +86,34 @@ createBtn("MARCAR ALVO (TAG)", UDim2.new(0.05, 0, 0.16, 0), Color3.fromRGB(138, 
     end
 end)
 
-createBtn("EXPULSAR ALVOS (FLING)", UDim2.new(0.05, 0, 0.24, 0), Color3.fromRGB(200, 0, 0)).MouseButton1Click:Connect(function()
-    local hrp = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+-- FUNÇÃO SUPER FLING COM GIRO
+createBtn("EXPULSAR ALVOS (SUPER SPIN)", UDim2.new(0.05, 0, 0.24, 0), Color3.fromRGB(200, 0, 0)).MouseButton1Click:Connect(function()
+    local lp = game.Players.LocalPlayer
+    local char = lp.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
+
     local oldPos = hrp.CFrame
+    
     for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= game.Players.LocalPlayer and p.Character and p.Character:FindFirstChild("Head") and p.Character.Head:FindFirstChild("V9Tag") then
+        if p ~= lp and p.Character and p.Character:FindFirstChild("Head") and p.Character.Head:FindFirstChild("V9Tag") then
             local tHrp = p.Character:FindFirstChild("HumanoidRootPart")
             if tHrp then
-                hrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 1)
-                hrp.Velocity = Vector3.new(0, 5000, 0) -- Força física FE
-                task.wait(0.1)
+                -- Ativa o Giro Supersônico
+                local spin = Instance.new("AngularVelocity", hrp)
+                spin.MaxTorque = math.huge
+                spin.AngularVelocity = Vector3.new(0, 99999, 0)
+                spin.RelativeTo = Enum.ActuatorRelativeTo.Attachment0
+                local att = Instance.new("Attachment", hrp)
+                spin.Attachment0 = att
+
+                -- Colisão
+                hrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 1.5)
+                task.wait(0.2)
+                
+                -- Limpa o Giro
+                spin:Destroy()
+                att:Destroy()
             end
         end
     end
