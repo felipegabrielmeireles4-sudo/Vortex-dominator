@@ -1,4 +1,4 @@
--- VORTEX DOMINATOR V10 - THE LENDARY UPDATE
+-- VORTEX DOMINATOR V10.1 - FIX IMORTAL & WORLD EATER
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local OpenBtn = Instance.new("TextButton")
@@ -10,7 +10,7 @@ local UIList = Instance.new("UIListLayout")
 
 -- [ SETUP DA SCREEN ]
 ScreenGui.Parent = game.CoreGui
-ScreenGui.Name = "Vortex_ULTIMATE"
+ScreenGui.Name = "Vortex_Ultimate"
 
 -- [ BOTÃO FLUTUANTE ]
 OpenBtn.Parent = ScreenGui
@@ -33,7 +33,7 @@ MainFrame.Active = true; MainFrame.Draggable = true
 Instance.new("UICorner", MainFrame)
 
 Title.Parent = MainFrame; Title.Size = UDim2.new(1, 0, 0, 45)
-Title.Text = "VORTEX ULTIMATE"; Title.TextColor3 = Color3.fromRGB(255, 215, 0)
+Title.Text = "VORTEX ULTIMATE (beta)"; Title.TextColor3 = Color3.fromRGB(255, 215, 0)
 Title.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Title.Font = Enum.Font.SourceSansBold
 
 CloseBtn.Parent = MainFrame; CloseBtn.Size = UDim2.new(0, 30, 0, 30); CloseBtn.Position = UDim2.new(1, -35, 0, 7)
@@ -64,17 +64,21 @@ end
 local escudado = false
 local suspeitos = {}
 
+-- [ SYNC MELHORADO ]
 local function SyncServer()
-    local char = game.Players.LocalPlayer.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
+    local p = game.Players.LocalPlayer
+    local char = p.Character
+    if char then
         local hum = char:FindFirstChildOfClass("Humanoid")
-        hum.Health = 100
-        hum:ChangeState(Enum.HumanoidStateType.GettingUp)
-        hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        if hum then
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+            hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+            if hum.Health <= 0 then hum.Health = 100 end
+        end
     end
 end
 
--- [ FUNÇÃO LENDÁRIA: WORLD EATER (O DEVORADOR) ]
+-- [ WORLD EATER ]
 local function WorldEater()
     local targetChar = nil
     for _, p in pairs(game.Players:GetPlayers()) do
@@ -152,6 +156,7 @@ BpBtn.MouseButton1Click:Connect(function()
     escudado = not escudado
     BpBtn.Text = escudado and "ESCUDO: ATIVO" or "ESCUDO VORTEX: OFF"
     BpBtn.BackgroundColor3 = escudado and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+    if escudado then SyncServer() end
 end)
 
 createBtn("SINCRONIZAR", UDim2.new(0.05, 0, 0.55, 0), Color3.fromRGB(0, 120, 120)).MouseButton1Click:Connect(SyncServer)
@@ -165,14 +170,22 @@ createBtn("LIMPAR RADAR", UDim2.new(0.05, 0, 0.71, 0), Color3.fromRGB(80, 0, 0))
     suspeitos = {}
 end)
 
--- [ HEARTBEAT PROTEÇÃO ]
+-- [ NOVO HEARTBEAT ULTRA-ESTÁVEL ]
 game:GetService("RunService").Heartbeat:Connect(function()
     if escudado then
-        local hum = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if hum then
-            hum.BreakJointsOnDeath = false
-            if hum.Health <= 0 then hum.Health = 0.1; SyncServer()
-            elseif hum.Health < 100 then hum.Health = 100 end
+        local p = game.Players.LocalPlayer
+        if p.Character then
+            local hum = p.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                -- Impede a morte antes de acontecer
+                hum.BreakJointsOnDeath = false
+                if hum.Health <= 0.1 then 
+                    hum.Health = 100
+                    SyncServer()
+                elseif hum.Health < 100 then
+                    hum.Health = 100
+                end
+            end
         end
     end
 end)
