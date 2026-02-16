@@ -1,578 +1,449 @@
 --[[
-    VORTEX NEBULA V12 - SISTEMA HUNTER ULTIMATE
-    COMPLETAMENTE FUNCIONAL PARA ROBLOX
+    VORTEX NEBULA V12 - VERSÃO DELTA
+    100% FUNCIONAL - COM END FINAL
 ]]
 
--- SERVICES
+-- Carregar serviços
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 
--- VARIÁVEIS GLOBAIS
-local LP = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
-local ScreenGui = Instance.new("ScreenGui")
-local escudado = false
-local vooAtivo = false
-local linhasAtivas = {}
-local suspeitos = {}
-local MenuVisible = false
+-- Função principal
+local function main()
+    -- Variáveis locais
+    local player = Players.LocalPlayer
+    local camera = workspace.CurrentCamera
+    local screenGui = Instance.new("ScreenGui")
+    local menuAberto = false
+    local escudoAtivo = false
+    local vooAtivo = false
+    local alvos = {}
+    local suspeitos = {}
 
--- CONFIGURAÇÕES DA GUI
-ScreenGui.Name = "VortexNebulaV12"
-ScreenGui.Parent = CoreGui
-ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    -- Configurar GUI principal
+    screenGui.Name = "VortexNebula"
+    screenGui.Parent = CoreGui
+    screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- BOTÃO FLUTUANTE
-local OpenBtn = Instance.new("TextButton")
-OpenBtn.Parent = ScreenGui
-OpenBtn.Size = UDim2.new(0, 60, 0, 60)
-OpenBtn.Position = UDim2.new(0, 20, 0.5, -30)
-OpenBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-OpenBtn.Text = "V12"
-OpenBtn.TextColor3 = Color3.fromRGB(0, 255, 255)
-OpenBtn.Font = Enum.Font.GothamBold
-OpenBtn.TextSize = 20
-OpenBtn.Draggable = true
-OpenBtn.Active = true
-OpenBtn.Selectable = true
-
--- ARREDONDAR BOTÃO
-local OpenCorner = Instance.new("UICorner")
-OpenCorner.CornerRadius = UDim.new(0, 30)
-OpenCorner.Parent = OpenBtn
-
--- BORDA BOTÃO
-local OpenStroke = Instance.new("UIStroke")
-OpenStroke.Color = Color3.fromRGB(0, 255, 255)
-OpenStroke.Thickness = 2
-OpenStroke.Parent = OpenBtn
-
--- MENU PRINCIPAL
-local MainFrame = Instance.new("Frame")
-MainFrame.Parent = ScreenGui
-MainFrame.Size = UDim2.new(0, 700, 0, 500)
-MainFrame.Position = UDim2.new(0.5, -350, 0.2, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-MainFrame.BorderSizePixel = 0
-MainFrame.Visible = false
-MainFrame.Active = true
-MainFrame.Draggable = true
-
--- ARREDONDAR MENU
-local MainCorner = Instance.new("UICorner")
-MainCorner.CornerRadius = UDim.new(0, 10)
-MainCorner.Parent = MainFrame
-
--- GRADIENTE MENU
-local MainGradient = Instance.new("UIGradient")
-MainGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 20, 20)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(5, 5, 5))
-})
-MainGradient.Parent = MainFrame
-
--- TÍTULO
-local Title = Instance.new("TextLabel")
-Title.Parent = MainFrame
-Title.Size = UDim2.new(1, 0, 0, 50)
-Title.Text = "🔥 VORTEX NEBULA V12 🔥"
-Title.TextColor3 = Color3.fromRGB(0, 255, 255)
-Title.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-Title.Font = Enum.Font.GothamBlack
-Title.TextSize = 24
-
--- CORNER DO TÍTULO
-local TitleCorner = Instance.new("UICorner")
-TitleCorner.CornerRadius = UDim.new(0, 10)
-TitleCorner.Parent = Title
-
--- BOTÃO FECHAR
-local CloseBtn = Instance.new("TextButton")
-CloseBtn.Parent = MainFrame
-CloseBtn.Size = UDim2.new(0, 35, 0, 35)
-CloseBtn.Position = UDim2.new(1, -45, 0, 7)
-CloseBtn.Text = "✕"
-CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
-CloseBtn.TextColor3 = Color3.new(1, 1, 1)
-CloseBtn.Font = Enum.Font.GothamBold
-CloseBtn.TextSize = 20
-
--- CORNER BOTÃO FECHAR
-local CloseCorner = Instance.new("UICorner")
-CloseCorner.CornerRadius = UDim.new(0, 8)
-CloseCorner.Parent = CloseBtn
-
--- INPUT DE NOME
-local NameInput = Instance.new("TextBox")
-NameInput.Parent = MainFrame
-NameInput.Size = UDim2.new(0.3, -10, 0, 40)
-NameInput.Position = UDim2.new(0.02, 0, 0.12, 0)
-NameInput.PlaceholderText = "🎯 NICK DO ALVO..."
-NameInput.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
-NameInput.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-NameInput.TextColor3 = Color3.new(1, 1, 1)
-NameInput.Font = Enum.Font.Gotham
-NameInput.TextSize = 14
-NameInput.ClearTextOnFocus = false
-
--- CORNER INPUT
-local InputCorner = Instance.new("UICorner")
-InputCorner.CornerRadius = UDim.new(0, 6)
-InputCorner.Parent = NameInput
-
--- BORDA INPUT
-local InputStroke = Instance.new("UIStroke")
-InputStroke.Color = Color3.fromRGB(0, 255, 255)
-InputStroke.Thickness = 1
-InputStroke.Parent = NameInput
-
--- FRAME DE CONTEÚDO
-local ContentFrame = Instance.new("Frame")
-ContentFrame.Parent = MainFrame
-ContentFrame.Size = UDim2.new(0.96, 0, 0, 300)
-ContentFrame.Position = UDim2.new(0.02, 0, 0.2, 0)
-ContentFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-ContentFrame.BackgroundTransparency = 0.5
-
--- CORNER CONTEÚDO
-local ContentCorner = Instance.new("UICorner")
-ContentCorner.CornerRadius = UDim.new(0, 8)
-ContentCorner.Parent = ContentFrame
-
--- LISTA DE BOTÕES
-local ButtonList = Instance.new("ScrollingFrame")
-ButtonList.Parent = ContentFrame
-ButtonList.Size = UDim2.new(1, -20, 1, -20)
-ButtonList.Position = UDim2.new(0, 10, 0, 10)
-ButtonList.BackgroundTransparency = 1
-ButtonList.BorderSizePixel = 0
-ButtonList.CanvasSize = UDim2.new(0, 0, 0, 0)
-ButtonList.ScrollBarThickness = 5
-ButtonList.ScrollBarImageColor3 = Color3.fromRGB(0, 255, 255)
-
--- LAYOUT DOS BOTÕES
-local ButtonLayout = Instance.new("UIListLayout")
-ButtonLayout.Parent = ButtonList
-ButtonLayout.SortOrder = Enum.SortOrder.LayoutOrder
-ButtonLayout.Padding = UDim.new(0, 5)
-
--- FUNÇÃO PARA CRIAR BOTÕES
-local function criarBotao(texto, cor, callback)
-    local botao = Instance.new("TextButton")
-    botao.Parent = ButtonList
-    botao.Size = UDim2.new(1, -10, 0, 45)
-    botao.BackgroundColor3 = cor
-    botao.Text = texto
-    botao.TextColor3 = Color3.new(1, 1, 1)
-    botao.Font = Enum.Font.GothamBold
-    botao.TextSize = 14
-    botao.AutoButtonColor = false
-    
-    local botaoCorner = Instance.new("UICorner")
-    botaoCorner.CornerRadius = UDim.new(0, 8)
-    botaoCorner.Parent = botao
-    
-    local botaoStroke = Instance.new("UIStroke")
-    botaoStroke.Color = Color3.fromRGB(255, 255, 255)
-    botaoStroke.Thickness = 1
-    botaoStroke.Transparency = 0.7
-    botaoStroke.Parent = botao
-    
-    botao.MouseButton1Click:Connect(callback)
-    
-    -- Efeito hover
-    botao.MouseEnter:Connect(function()
-        TweenService:Create(botao, TweenInfo.new(0.2), {BackgroundColor3 = cor:Lerp(Color3.new(1,1,1), 0.2)}):Play()
-    end)
-    
-    botao.MouseLeave:Connect(function()
-        TweenService:Create(botao, TweenInfo.new(0.2), {BackgroundColor3 = cor}):Play()
-    end)
-    
-    return botao
-end
-
--- BOTÃO 1: MARCAR ALVO
-criarBotao("🎯 MARCAR ALVO", Color3.fromRGB(138, 43, 226), function()
-    local alvo = NameInput.Text
-    if alvo == "" then
-        alvo = "Todos"
+    -- Função para criar botão flutuante
+    local function criarBotaoFlutuante()
+        local botao = Instance.new("TextButton")
+        botao.Parent = screenGui
+        botao.Size = UDim2.new(0, 60, 0, 60)
+        botao.Position = UDim2.new(0, 20, 0.5, -30)
+        botao.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        botao.Text = "V12"
+        botao.TextColor3 = Color3.fromRGB(0, 255, 255)
+        botao.Font = Enum.Font.SourceSansBold
+        botao.TextSize = 24
+        botao.Draggable = true
+        botao.Name = "BotaoFlutuante"
+        
+        -- Arredondar
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 30)
+        corner.Parent = botao
+        
+        -- Borda
+        local stroke = Instance.new("UIStroke")
+        stroke.Color = Color3.fromRGB(0, 255, 255)
+        stroke.Thickness = 2
+        stroke.Parent = botao
+        
+        return botao
     end
-    
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LP and (alvo == "Todos" or string.find(player.Name:lower(), alvo:lower())) then
-            if player.Character and player.Character:FindFirstChild("Head") then
-                local head = player.Character.Head
-                
-                -- Remover tag antiga
-                if head:FindFirstChild("TagV12") then
-                    head.TagV12:Destroy()
-                end
-                
-                -- Criar nova tag
-                local tag = Instance.new("BillboardGui")
-                tag.Name = "TagV12"
-                tag.Parent = head
-                tag.Size = UDim2.new(0, 200, 0, 50)
-                tag.StudsOffset = Vector3.new(0, 3, 0)
-                tag.AlwaysOnTop = true
-                
-                local frame = Instance.new("Frame")
-                frame.Parent = tag
-                frame.Size = UDim2.new(1, 0, 1, 0)
-                frame.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-                frame.BackgroundTransparency = 0.3
-                
-                local frameCorner = Instance.new("UICorner")
-                frameCorner.CornerRadius = UDim.new(0, 10)
-                frameCorner.Parent = frame
-                
-                local texto = Instance.new("TextLabel")
-                texto.Parent = tag
-                texto.Size = UDim2.new(1, 0, 1, 0)
-                texto.Text = "🔥 ALVO V12 🔥\n" .. player.Name
-                texto.TextColor3 = Color3.new(1, 1, 1)
-                texto.BackgroundTransparency = 1
-                texto.TextScaled = true
-                texto.Font = Enum.Font.GothamBlack
-                
-                local textoStroke = Instance.new("UIStroke")
-                textoStroke.Color = Color3.fromRGB(255, 0, 0)
-                textoStroke.Thickness = 2
-                textoStroke.Parent = texto
-            end
-        end
-    end
-end)
 
--- BOTÃO 2: WORLD EATER
-criarBotao("🌍 WORLD EATER", Color3.fromRGB(255, 69, 0), function()
-    local alvo = NameInput.Text
-    if alvo == "" then return end
-    
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LP and string.find(player.Name:lower(), alvo:lower()) then
-            if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local hrp = player.Character.HumanoidRootPart
-                
-                spawn(function()
-                    local partes = {}
-                    for _, obj in ipairs(workspace:GetDescendants()) do
-                        if obj:IsA("BasePart") and not obj.Anchored and obj.Parent and not obj:IsDescendantOf(LP.Character) then
-                            if obj.Name ~= "Baseplate" and obj.Size.Magnitude < 50 then
-                                table.insert(partes, obj)
-                            end
-                        end
-                    end
-                    
-                    for i, parte in ipairs(partes) do
-                        if parte and parte.Parent then
-                            parte.CFrame = hrp.CFrame * CFrame.new(0, 5 + i, 0)
-                            parte.Velocity = Vector3.new(math.random(-50, 50), 100, math.random(-50, 50))
-                            wait(0.01)
-                        end
-                    end
-                end)
-            end
-        end
-    end
-end)
-
--- BOTÃO 3: EXPULSAR
-criarBotao("💥 EXPULSAR", Color3.fromRGB(200, 0, 0), function()
-    local lp = LP
-    if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then return end
-    
-    local hrp = lp.Character.HumanoidRootPart
-    local oldPos = hrp.CFrame
-    
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= lp and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local thrp = player.Character.HumanoidRootPart
+    -- Função para criar menu principal
+    local function criarMenu()
+        local frame = Instance.new("Frame")
+        frame.Parent = screenGui
+        frame.Size = UDim2.new(0, 600, 0, 450)
+        frame.Position = UDim2.new(0.5, -300, 0.2, 0)
+        frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+        frame.BackgroundTransparency = 0.1
+        frame.Active = true
+        frame.Draggable = true
+        frame.Visible = false
+        frame.Name = "MenuPrincipal"
+        
+        -- Arredondar
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 10)
+        corner.Parent = frame
+        
+        -- Título
+        local titulo = Instance.new("TextLabel")
+        titulo.Parent = frame
+        titulo.Size = UDim2.new(1, 0, 0, 40)
+        titulo.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        titulo.Text = "🔥 VORTEX NEBULA V12 🔥"
+        titulo.TextColor3 = Color3.fromRGB(0, 255, 255)
+        titulo.Font = Enum.Font.SourceSansBold
+        titulo.TextSize = 24
+        
+        -- Botão fechar
+        local fechar = Instance.new("TextButton")
+        fechar.Parent = frame
+        fechar.Size = UDim2.new(0, 30, 0, 30)
+        fechar.Position = UDim2.new(1, -40, 0, 5)
+        fechar.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+        fechar.Text = "X"
+        fechar.TextColor3 = Color3.new(1, 1, 1)
+        fechar.Font = Enum.Font.SourceSansBold
+        fechar.TextSize = 20
+        
+        local fecharCorner = Instance.new("UICorner")
+        fecharCorner.CornerRadius = UDim.new(0, 6)
+        fecharCorner.Parent = fechar
+        
+        -- Input de nome
+        local input = Instance.new("TextBox")
+        input.Parent = frame
+        input.Size = UDim2.new(0.4, -10, 0, 35)
+        input.Position = UDim2.new(0.02, 0, 0.1, 0)
+        input.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        input.PlaceholderText = "Nome do alvo..."
+        input.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+        input.Text = ""
+        input.TextColor3 = Color3.new(1, 1, 1)
+        input.Font = Enum.Font.SourceSans
+        input.TextSize = 16
+        
+        local inputCorner = Instance.new("UICorner")
+        inputCorner.CornerRadius = UDim.new(0, 6)
+        inputCorner.Parent = input
+        
+        -- Container dos botões
+        local container = Instance.new("ScrollingFrame")
+        container.Parent = frame
+        container.Size = UDim2.new(0.96, 0, 0, 250)
+        container.Position = UDim2.new(0.02, 0, 0.2, 0)
+        container.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        container.BackgroundTransparency = 0.5
+        container.CanvasSize = UDim2.new(0, 0, 0, 0)
+        container.ScrollBarThickness = 5
+        
+        local containerCorner = Instance.new("UICorner")
+        containerCorner.CornerRadius = UDim.new(0, 8)
+        containerCorner.Parent = container
+        
+        local layout = Instance.new("UIListLayout")
+        layout.Parent = container
+        layout.Padding = UDim.new(0, 5)
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        
+        -- Função para criar botões
+        local function criarBotao(texto, cor, callback)
+            local btn = Instance.new("TextButton")
+            btn.Parent = container
+            btn.Size = UDim2.new(1, -10, 0, 40)
+            btn.BackgroundColor3 = cor
+            btn.Text = texto
+            btn.TextColor3 = Color3.new(1, 1, 1)
+            btn.Font = Enum.Font.SourceSansBold
+            btn.TextSize = 16
             
-            for i = 1, 20 do
-                hrp.CFrame = thrp.CFrame * CFrame.new(0, 10 * math.sin(i), 10 * math.cos(i))
-                thrp.Velocity = Vector3.new(0, 500, 0)
-                
-                local efeito = Instance.new("Part")
-                efeito.Size = Vector3.new(2, 2, 2)
-                efeito.CFrame = thrp.CFrame
-                efeito.BrickColor = BrickColor.new("Bright red")
-                efeito.Material = Enum.Material.Neon
-                efeito.Anchored = true
-                efeito.CanCollide = false
-                efeito.Parent = workspace
-                
-                game:GetService("Debris"):AddItem(efeito, 0.3)
-                wait(0.03)
-            end
-        end
-    end
-    
-    hrp.CFrame = oldPos
-end)
-
--- BOTÃO 4: INVISIBILIDADE
-criarBotao("👻 INVISIBILIDADE", Color3.fromRGB(128, 0, 128), function()
-    if LP.Character then
-        for _, parte in ipairs(LP.Character:GetDescendants()) do
-            if parte:IsA("BasePart") then
-                parte.Transparency = 1
-            end
-        end
-    end
-end)
-
--- BOTÃO 5: VOO
-criarBotao("🦅 ATIVAR VOO", Color3.fromRGB(0, 100, 200), function()
-    vooAtivo = not vooAtivo
-    
-    if vooAtivo and LP.Character and LP.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = LP.Character.HumanoidRootPart
-        local bodyGyro = Instance.new("BodyGyro")
-        local bodyVelocity = Instance.new("BodyVelocity")
-        
-        bodyGyro.Parent = hrp
-        bodyGyro.MaxTorque = Vector3.new(40000, 40000, 40000)
-        bodyGyro.P = 20000
-        bodyGyro.D = 1000
-        
-        bodyVelocity.Parent = hrp
-        bodyVelocity.MaxForce = Vector3.new(40000, 40000, 40000)
-        bodyVelocity.Velocity = Vector3.new(0, 0, 0)
-        
-        spawn(function()
-            while vooAtivo and LP.Character and hrp.Parent do
-                local moveDir = Vector3.new()
-                
-                if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-                    moveDir = moveDir + Camera.CFrame.LookVector
-                end
-                if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-                    moveDir = moveDir - Camera.CFrame.LookVector
-                end
-                if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-                    moveDir = moveDir - Camera.CFrame.RightVector
-                end
-                if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-                    moveDir = moveDir + Camera.CFrame.RightVector
-                end
-                if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-                    moveDir = moveDir + Vector3.new(0, 1, 0)
-                end
-                if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-                    moveDir = moveDir - Vector3.new(0, 1, 0)
-                end
-                
-                if moveDir.Magnitude > 0 then
-                    moveDir = moveDir.Unit * 50
-                end
-                
-                bodyGyro.CFrame = CFrame.new(hrp.Position, hrp.Position + (Camera.CFrame.LookVector * 10))
-                bodyVelocity.Velocity = moveDir
-                
-                wait()
-            end
+            local btnCorner = Instance.new("UICorner")
+            btnCorner.CornerRadius = UDim.new(0, 6)
+            btnCorner.Parent = btn
             
-            if bodyGyro then bodyGyro:Destroy() end
-            if bodyVelocity then bodyVelocity:Destroy() end
+            btn.MouseButton1Click:Connect(callback)
+            
+            return btn
+        end
+        
+        -- Botões de função
+        criarBotao("🎯 MARCAR ALVO", Color3.fromRGB(138, 43, 226), function()
+            local nomeAlvo = input.Text
+            if nomeAlvo == "" then return end
+            
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= player and p.Name:lower():find(nomeAlvo:lower()) then
+                    if p.Character and p.Character:FindFirstChild("Head") then
+                        local cabeca = p.Character.Head
+                        
+                        -- Remover tag antiga
+                        if cabeca:FindFirstChild("Tag") then
+                            cabeca.Tag:Destroy()
+                        end
+                        
+                        -- Criar nova tag
+                        local tag = Instance.new("BillboardGui")
+                        tag.Name = "Tag"
+                        tag.Parent = cabeca
+                        tag.Size = UDim2.new(0, 150, 0, 40)
+                        tag.StudsOffset = Vector3.new(0, 3, 0)
+                        tag.AlwaysOnTop = true
+                        
+                        local texto = Instance.new("TextLabel")
+                        texto.Parent = tag
+                        texto.Size = UDim2.new(1, 0, 1, 0)
+                        texto.BackgroundTransparency = 0.5
+                        texto.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+                        texto.Text = "🔴 ALVO\n" .. p.Name
+                        texto.TextColor3 = Color3.new(1, 1, 1)
+                        texto.Font = Enum.Font.SourceSansBold
+                        texto.TextScaled = true
+                        
+                        alvos[p.Name] = p
+                    end
+                end
+            end
         end)
-    end
-end)
-
--- BOTÃO 6: DETECTAR HACKERS
-criarBotao("🔍 DETECTAR HACKERS", Color3.fromRGB(0, 150, 0), function()
-    spawn(function()
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= LP and player.Character then
-                local hrp = player.Character:FindFirstChild("HumanoidRootPart")
-                local hum = player.Character:FindFirstChildOfClass("Humanoid")
-                
-                if hrp and hum then
-                    -- Detectar speed hack
-                    if hum.WalkSpeed > 30 then
-                        suspeitos[player.Name] = {
-                            tipo = "⚡ SPEED HACK",
-                            valor = hum.WalkSpeed
-                        }
-                    end
-                    
-                    -- Detectar fly hack
-                    if hrp.Position.Y > 50 then
-                        suspeitos[player.Name] = {
-                            tipo = "🦅 FLY HACK",
-                            valor = math.floor(hrp.Position.Y)
-                        }
+        
+        criarBotao("🛡️ ATIVAR ESCUDO", Color3.fromRGB(0, 150, 0), function()
+            escudoAtivo = not escudoAtivo
+            
+            if escudoAtivo then
+                if player.Character then
+                    local hum = player.Character:FindFirstChildOfClass("Humanoid")
+                    if hum then
+                        hum.BreakJointsOnDeath = false
                     end
                 end
             end
-        end
+        end)
         
-        -- Mostrar suspeitos
-        for nome, dados in pairs(suspeitos) do
-            print(string.format("🚨 SUSPEITO: %s | %s | %s", nome, dados.tipo, dados.valor))
+        criarBotao("🦅 ATIVAR VOO", Color3.fromRGB(0, 100, 200), function()
+            vooAtivo = not vooAtivo
+            
+            if vooAtivo and player.Character then
+                local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    local bg = Instance.new("BodyGyro")
+                    local bv = Instance.new("BodyVelocity")
+                    
+                    bg.Parent = hrp
+                    bg.MaxTorque = Vector3.new(40000, 40000, 40000)
+                    bg.P = 20000
+                    
+                    bv.Parent = hrp
+                    bv.MaxForce = Vector3.new(40000, 40000, 40000)
+                    
+                    -- Loop do voo
+                    spawn(function()
+                        while vooAtivo and hrp and hrp.Parent do
+                            local move = Vector3.new()
+                            
+                            if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+                                move = move + camera.CFrame.LookVector
+                            end
+                            if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+                                move = move - camera.CFrame.LookVector
+                            end
+                            if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+                                move = move - camera.CFrame.RightVector
+                            end
+                            if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+                                move = move + camera.CFrame.RightVector
+                            end
+                            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                                move = move + Vector3.new(0, 1, 0)
+                            end
+                            if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+                                move = move - Vector3.new(0, 1, 0)
+                            end
+                            
+                            if move.Magnitude > 0 then
+                                move = move.Unit * 50
+                            end
+                            
+                            bg.CFrame = CFrame.new(hrp.Position, hrp.Position + camera.CFrame.LookVector)
+                            bv.Velocity = move
+                            
+                            RunService.RenderStepped:Wait()
+                        end
+                        
+                        if bg then bg:Destroy() end
+                        if bv then bv:Destroy() end
+                    end)
+                end
+            end
+        end)
+        
+        criarBotao("🔍 DETECTAR HACKERS", Color3.fromRGB(150, 0, 150), function()
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= player and p.Character then
+                    local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+                    local hum = p.Character:FindFirstChildOfClass("Humanoid")
+                    
+                    if hrp and hum then
+                        -- Speed hack
+                        if hum.WalkSpeed > 30 then
+                            suspeitos[p.Name] = {
+                                tipo = "Speed Hack",
+                                valor = hum.WalkSpeed
+                            }
+                        end
+                        
+                        -- Fly hack (posição Y alta)
+                        if hrp.Position.Y > 50 then
+                            suspeitos[p.Name] = {
+                                tipo = "Fly Hack",
+                                valor = math.floor(hrp.Position.Y)
+                            }
+                        end
+                    end
+                end
+            end
+            
+            print("=== SUSPEITOS DETECTADOS ===")
+            for nome, dados in pairs(suspeitos) do
+                print(nome .. " - " .. dados.tipo .. " (" .. dados.valor .. ")")
+            end
+        end)
+        
+        criarBotao("💥 EXPULSAR ALVO", Color3.fromRGB(200, 0, 0), function()
+            local nomeAlvo = input.Text
+            if nomeAlvo == "" then return end
+            
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= player and p.Name:lower():find(nomeAlvo:lower()) then
+                    if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        local hrp = p.Character.HumanoidRootPart
+                        hrp.Velocity = Vector3.new(0, 5000, 0)
+                    end
+                end
+            end
+        end)
+        
+        criarBotao("👻 INVISIBILIDADE", Color3.fromRGB(128, 0, 128), function()
+            if player.Character then
+                for _, v in pairs(player.Character:GetDescendants()) do
+                    if v:IsA("BasePart") then
+                        v.Transparency = 1
+                    end
+                end
+            end
+        end)
+        
+        criarBotao("🧹 LIMPAR TUDO", Color3.fromRGB(80, 80, 80), function()
+            -- Remover tags
+            for _, p in pairs(Players:GetPlayers()) do
+                if p.Character and p.Character:FindFirstChild("Head") then
+                    local cabeca = p.Character.Head
+                    if cabeca:FindFirstChild("Tag") then
+                        cabeca.Tag:Destroy()
+                    end
+                end
+            end
+            
+            -- Limpar listas
+            alvos = {}
+            suspeitos = {}
+            
+            -- Resetar visibilidade
+            if player.Character then
+                for _, v in pairs(player.Character:GetDescendants()) do
+                    if v:IsA("BasePart") then
+                        v.Transparency = 0
+                    end
+                end
+            end
+            
+            -- Desativar voo
+            vooAtivo = false
+        end)
+        
+        -- Ajustar canvas size
+        layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            container.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 10)
+        end)
+        
+        -- Frame de status
+        local statusFrame = Instance.new("Frame")
+        statusFrame.Parent = frame
+        statusFrame.Size = UDim2.new(0.96, 0, 0, 60)
+        statusFrame.Position = UDim2.new(0.02, 0, 0.8, 0)
+        statusFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+        
+        local statusCorner = Instance.new("UICorner")
+        statusCorner.CornerRadius = UDim.new(0, 8)
+        statusCorner.Parent = statusFrame
+        
+        local statusTexto = Instance.new("TextLabel")
+        statusTexto.Parent = statusFrame
+        statusTexto.Size = UDim2.new(1, -10, 1, -10)
+        statusTexto.Position = UDim2.new(0, 5, 0, 5)
+        statusTexto.BackgroundTransparency = 1
+        statusTexto.Text = "✅ Sistema carregado | Escudo: OFF | Voo: OFF"
+        statusTexto.TextColor3 = Color3.new(1, 1, 1)
+        statusTexto.Font = Enum.Font.SourceSans
+        statusTexto.TextSize = 16
+        statusTexto.TextXAlignment = Enum.TextXAlignment.Left
+        
+        -- Atualizar status
+        spawn(function()
+            while true do
+                wait(0.5)
+                statusTexto.Text = string.format("✅ Sistema ativo | Escudo: %s | Voo: %s", 
+                    escudoAtivo and "ON" or "OFF",
+                    vooAtivo and "ON" or "OFF")
+            end
+        end)
+        
+        return frame, fechar
+    end
+
+    -- Criar elementos
+    local botaoFlutuante = criarBotaoFlutuante()
+    local menu, botaoFechar = criarMenu()
+
+    -- Controle do menu
+    botaoFlutuante.MouseButton1Click:Connect(function()
+        menu.Visible = true
+        botaoFlutuante.Visible = false
+    end)
+
+    botaoFechar.MouseButton1Click:Connect(function()
+        menu.Visible = false
+        botaoFlutuante.Visible = true
+    end)
+
+    -- Loop de proteção do escudo
+    RunService.RenderStepped:Connect(function()
+        if escudoAtivo and player.Character then
+            local hum = player.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                if hum.Health < 100 then
+                    hum.Health = 100
+                end
+                
+                if hum:GetState() == Enum.HumanoidStateType.Dead then
+                    hum:ChangeState(Enum.HumanoidStateType.Running)
+                end
+            end
         end
     end)
-end)
 
--- BOTÃO 7: LIMPAR TAGS
-criarBotao("🧹 LIMPAR TAGS", Color3.fromRGB(150, 0, 150), function()
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player.Character and player.Character:FindFirstChild("Head") then
-            local head = player.Character.Head
-            if head:FindFirstChild("TagV12") then
-                head.TagV12:Destroy()
-            end
-        end
-    end
-    
-    for _, line in pairs(linhasAtivas) do
-        if line then line:Destroy() end
-    end
-    linhasAtivas = {}
-    suspeitos = {}
-end)
+    -- Notificação inicial
+    local notificacao = Instance.new("TextLabel")
+    notificacao.Parent = screenGui
+    notificacao.Size = UDim2.new(0, 300, 0, 50)
+    notificacao.Position = UDim2.new(0.5, -150, 0, -50)
+    notificacao.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    notificacao.BackgroundTransparency = 0.2
+    notificacao.Text = "🔥 VORTEX NEBULA V12 CARREGADO 🔥"
+    notificacao.TextColor3 = Color3.fromRGB(0, 255, 255)
+    notificacao.Font = Enum.Font.SourceSansBold
+    notificacao.TextSize = 18
+    notificacao.TextScaled = true
 
--- ATUALIZAR CANVAS SIZE
-ButtonLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    ButtonList.CanvasSize = UDim2.new(0, 0, 0, ButtonLayout.AbsoluteContentSize.Y + 10)
-end)
+    local notifCorner = Instance.new("UICorner")
+    notifCorner.CornerRadius = UDim.new(0, 10)
+    notifCorner.Parent = notificacao
 
--- ESCUDO
-local ShieldBtn = Instance.new("TextButton")
-ShieldBtn.Parent = MainFrame
-ShieldBtn.Size = UDim2.new(0.3, 0, 0, 45)
-ShieldBtn.Position = UDim2.new(0.02, 0, 0.85, 0)
-ShieldBtn.Text = "🛡️ ESCUDO: OFF"
-ShieldBtn.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-ShieldBtn.TextColor3 = Color3.new(1, 1, 1)
-ShieldBtn.Font = Enum.Font.GothamBold
-ShieldBtn.TextSize = 14
+    -- Animação da notificação
+    TweenService:Create(notificacao, TweenInfo.new(0.5), {Position = UDim2.new(0.5, -150, 0, 20)}):Play()
+    wait(3)
+    TweenService:Create(notificacao, TweenInfo.new(0.5), {Position = UDim2.new(0.5, -150, 0, -50)}):Play()
+    wait(0.5)
+    notificacao:Destroy()
 
-local ShieldCorner = Instance.new("UICorner")
-ShieldCorner.CornerRadius = UDim.new(0, 8)
-ShieldCorner.Parent = ShieldBtn
+    print("✅ Vortex Nebula V12 carregado com sucesso!")
+    print("📌 Pressione o botão V12 na tela para abrir o menu")
 
-ShieldBtn.MouseButton1Click:Connect(function()
-    escudado = not escudado
-    ShieldBtn.Text = escudado and "🛡️ ESCUDO: ATIVO" or "🛡️ ESCUDO: OFF"
-    ShieldBtn.BackgroundColor3 = escudado and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
-end)
-
--- LISTA DE SUSPEITOS
-local SuspectList = Instance.new("ScrollingFrame")
-SuspectList.Parent = MainFrame
-SuspectList.Size = UDim2.new(0.6, 0, 0, 100)
-SuspectList.Position = UDim2.new(0.35, 0, 0.85, 0)
-SuspectList.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-SuspectList.BorderSizePixel = 0
-SuspectList.CanvasSize = UDim2.new(0, 0, 0, 0)
-
-local SuspectCorner = Instance.new("UICorner")
-SuspectCorner.CornerRadius = UDim.new(0, 8)
-SuspectCorner.Parent = SuspectList
-
-local SuspectLayout = Instance.new("UIListLayout")
-SuspectLayout.Parent = SuspectList
-SuspectLayout.Padding = UDim.new(0, 2)
-
--- FUNÇÃO PARA ALTERNAR MENU
-local function toggleMenu()
-    MenuVisible = not MenuVisible
-    MainFrame.Visible = MenuVisible
-    OpenBtn.Visible = not MenuVisible
 end
-
-CloseBtn.MouseButton1Click:Connect(toggleMenu)
-OpenBtn.MouseButton1Click:Connect(toggleMenu)
-
--- LOOP DE PROTEÇÃO
-RunService.RenderStepped:Connect(function()
-    if escudado and LP.Character then
-        local hum = LP.Character:FindFirstChildOfClass("Humanoid")
-        if hum then
-            if hum.Health < 100 then
-                hum.Health = 100
-            end
-            
-            if hum:GetState() == Enum.HumanoidStateType.Dead then
-                hum:ChangeState(Enum.HumanoidStateType.Running)
-            end
-        end
-    end
-end)
-
--- ATUALIZAR LISTA DE SUSPEITOS
-spawn(function()
-    while true do
-        wait(2)
-        
-        -- Limpar lista antiga
-        for _, child in ipairs(SuspectList:GetChildren()) do
-            if child:IsA("TextLabel") then
-                child:Destroy()
-            end
-        end
-        
-        -- Adicionar suspeitos
-        for nome, dados in pairs(suspeitos) do
-            local label = Instance.new("TextLabel")
-            label.Parent = SuspectList
-            label.Size = UDim2.new(1, -10, 0, 25)
-            label.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
-            label.Text = string.format("%s | %s | %s", nome, dados.tipo, tostring(dados.valor))
-            label.TextColor3 = Color3.fromRGB(255, 100, 100)
-            label.Font = Enum.Font.Gotham
-            label.TextSize = 12
-            
-            local labelCorner = Instance.new("UICorner")
-            labelCorner.CornerRadius = UDim.new(0, 4)
-            labelCorner.Parent = label
-        end
-        
-        SuspectList.CanvasSize = UDim2.new(0, 0, 0, SuspectLayout.AbsoluteContentSize.Y)
-    end
-end)
-
--- SISTEMA DE ARCO-ÍRIS
-spawn(function()
-    local hue = 0
-    while true do
-        hue = (hue + 0.01) % 1
-        local color = Color3.fromHSV(hue, 1, 1)
-        OpenBtn.TextColor3 = color
-        OpenStroke.Color = color
-        Title.TextColor3 = color
-        wait(0.05)
-    end
-end)
-
--- NOTIFICAÇÃO
-local Notification = Instance.new("TextLabel")
-Notification.Parent = ScreenGui
-Notification.Size = UDim2.new(0, 300, 0, 50)
-Notification.Position = UDim2.new(0.5, -150, 0, -50)
-Notification.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-Notification.BackgroundTransparency = 0.3
-Notification.Text = "🔥 VORTEX NEBULA V12 CARREGADO 🔥"
-Notification.TextColor3 = Color3.fromRGB(0, 255, 255)
-Notification.Font = Enum.Font.GothamBold
-Notification.TextSize = 16
-
-local NotifCorner = Instance.new("UICorner")
-NotifCorner.CornerRadius = UDim.new(0, 10)
-NotifCorner.Parent = Notification
-
-local NotifStroke = Instance.new("UIStroke")
-NotifStroke.Color = Color3.fromRGB(0, 255, 255)
-NotifStroke.Thickness = 2
-NotifStroke.Parent = Notification
-
--- ANIMAÇÃO DA NOTIFICAÇÃO
-TweenService:Create(Notification, TweenInfo.new(0.5), {Position = UDim2.new(0.5, -150, 0, 20)}):Play()
-wait(3)
-TweenService:Create(Notification, TweenInfo.new(0.5), {Position = UDim2.n
