@@ -1,4 +1,4 @@
--- VORTEX DOMINATOR V10.1 - FIX IMORTAL & WORLD EATER
+-- VORTEX DOMINATOR V10.2 - O ESCUDO DEFINITIVO (GOD STATE)
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local OpenBtn = Instance.new("TextButton")
@@ -10,7 +10,7 @@ local UIList = Instance.new("UIListLayout")
 
 -- [ SETUP DA SCREEN ]
 ScreenGui.Parent = game.CoreGui
-ScreenGui.Name = "Vortex_Ultimate"
+ScreenGui.Name = "VortexV10_Final"
 
 -- [ BOTÃO FLUTUANTE ]
 OpenBtn.Parent = ScreenGui
@@ -33,7 +33,7 @@ MainFrame.Active = true; MainFrame.Draggable = true
 Instance.new("UICorner", MainFrame)
 
 Title.Parent = MainFrame; Title.Size = UDim2.new(1, 0, 0, 45)
-Title.Text = "VORTEX ULTIMATE (beta)"; Title.TextColor3 = Color3.fromRGB(255, 215, 0)
+Title.Text = "VORTEX ULTIMATE(BETA)"; Title.TextColor3 = Color3.fromRGB(255, 215, 0)
 Title.BackgroundColor3 = Color3.fromRGB(15, 15, 15); Title.Font = Enum.Font.SourceSansBold
 
 CloseBtn.Parent = MainFrame; CloseBtn.Size = UDim2.new(0, 30, 0, 30); CloseBtn.Position = UDim2.new(1, -35, 0, 7)
@@ -64,16 +64,20 @@ end
 local escudado = false
 local suspeitos = {}
 
--- [ SYNC MELHORADO ]
-local function SyncServer()
+-- [ FUNÇÃO DE ESTADO IMORTAL ]
+local function SetGodState(state)
     local p = game.Players.LocalPlayer
     local char = p.Character
     if char then
         local hum = char:FindFirstChildOfClass("Humanoid")
         if hum then
-            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-            hum:ChangeState(Enum.HumanoidStateType.GettingUp)
-            if hum.Health <= 0 then hum.Health = 100 end
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, not state)
+            hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, not state)
+            hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, not state)
+            if state then
+                hum.BreakJointsOnDeath = false
+                hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+            end
         end
     end
 end
@@ -132,23 +136,7 @@ createBtn("EXPULSAR (POWER SPIN)", UDim2.new(0.05, 0, 0.31, 0), Color3.fromRGB(2
             end
         end
     end
-    hrp.CFrame = oldPos; SyncServer()
-end)
-
-createBtn("RADAR ELITE", UDim2.new(0.05, 0, 0.39, 0), Color3.fromRGB(40, 40, 40)).MouseButton1Click:Connect(function()
-    task.spawn(function()
-        while task.wait(0.5) do
-            for _, p in pairs(game.Players:GetPlayers()) do
-                if p ~= game.Players.LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                    if p.Character.HumanoidRootPart.Velocity.Magnitude > 165 and not suspeitos[p.Name] then
-                        suspeitos[p.Name] = true
-                        local l = Instance.new("TextLabel", ListFrame)
-                        l.Size = UDim2.new(1, 0, 0, 25); l.Text = " [!] " .. p.Name; l.TextColor3 = Color3.new(1,1,1); l.BackgroundColor3 = Color3.fromRGB(40,0,0)
-                    end
-                end
-            end
-        end
-    end)
+    hrp.CFrame = oldPos
 end)
 
 local BpBtn = createBtn("ESCUDO VORTEX: OFF", UDim2.new(0.05, 0, 0.47, 0), Color3.fromRGB(150, 0, 0))
@@ -156,13 +144,11 @@ BpBtn.MouseButton1Click:Connect(function()
     escudado = not escudado
     BpBtn.Text = escudado and "ESCUDO: ATIVO" or "ESCUDO VORTEX: OFF"
     BpBtn.BackgroundColor3 = escudado and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
-    if escudado then SyncServer() end
+    SetGodState(escudado)
 end)
 
-createBtn("SINCRONIZAR", UDim2.new(0.05, 0, 0.55, 0), Color3.fromRGB(0, 120, 120)).MouseButton1Click:Connect(SyncServer)
-
-createBtn("VOO FANTASMA", UDim2.new(0.05, 0, 0.63, 0), Color3.fromRGB(0, 50, 150)).MouseButton1Click:Connect(function()
-    loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-Invinicible-Flight-R15-45414"))()
+createBtn("SINCRONIZAR", UDim2.new(0.05, 0, 0.55, 0), Color3.fromRGB(0, 120, 120)).MouseButton1Click:Connect(function()
+    SetGodState(escudado)
 end)
 
 createBtn("LIMPAR RADAR", UDim2.new(0.05, 0, 0.71, 0), Color3.fromRGB(80, 0, 0)).MouseButton1Click:Connect(function()
@@ -170,21 +156,16 @@ createBtn("LIMPAR RADAR", UDim2.new(0.05, 0, 0.71, 0), Color3.fromRGB(80, 0, 0))
     suspeitos = {}
 end)
 
--- [ NOVO HEARTBEAT ULTRA-ESTÁVEL ]
+-- [ LOOP DE PROTEÇÃO ETERNA ]
 game:GetService("RunService").Heartbeat:Connect(function()
     if escudado then
         local p = game.Players.LocalPlayer
         if p.Character then
             local hum = p.Character:FindFirstChildOfClass("Humanoid")
             if hum then
-                -- Impede a morte antes de acontecer
-                hum.BreakJointsOnDeath = false
-                if hum.Health <= 0.1 then 
-                    hum.Health = 100
-                    SyncServer()
-                elseif hum.Health < 100 then
-                    hum.Health = 100
-                end
+                if hum.Health < 100 then hum.Health = 100 end
+                -- Força o estado imortal a cada frame
+                hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
             end
         end
     end
