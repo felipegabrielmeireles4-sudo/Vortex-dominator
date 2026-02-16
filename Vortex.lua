@@ -1,4 +1,5 @@
--- VORTEX DOMINATOR V9.3 - SUPER SPIN FLING UPDATE
+-- VORTEX DOMINATOR V9.4 - POWER SPIN FLING
+-- [MANTÉM TODO O SETUP INICIAL DE UI DA VERSÃO ANTERIOR]
 local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = Instance.new("Frame")
 local OpenBtn = Instance.new("TextButton")
@@ -10,7 +11,7 @@ local UIList = Instance.new("UIListLayout")
 
 -- [ SETUP DA SCREEN ]
 ScreenGui.Parent = game.CoreGui
-ScreenGui.Name = "VortexDominatorV9_3"
+ScreenGui.Name = "VortexDominatorV9_4"
 
 -- [ BOTÃO FLUTUANTE ]
 OpenBtn.Parent = ScreenGui
@@ -32,7 +33,7 @@ MainFrame.Position = UDim2.new(0.5, -130, 0.2, 0)
 MainFrame.Active = true; MainFrame.Draggable = true
 
 Title.Parent = MainFrame; Title.Size = UDim2.new(1, 0, 0, 40)
-Title.Text = "VORTEX V9:DOMINATOR"; Title.TextColor3 = Color3.new(1,1,1)
+Title.Text = "VORTEX V9.4: DOMINATOR"; Title.TextColor3 = Color3.new(1,1,1)
 Title.BackgroundColor3 = Color3.fromRGB(138, 43, 226); Title.Font = Enum.Font.SourceSansBold
 
 CloseBtn.Parent = MainFrame; CloseBtn.Size = UDim2.new(0, 30, 0, 30); CloseBtn.Position = UDim2.new(1, -35, 0, 5)
@@ -73,7 +74,7 @@ local function SyncServer()
     end
 end
 
--- [ FUNÇÕES DOS BOTÕES ]
+-- [ TAG SYSTEM ]
 createBtn("MARCAR ALVO (TAG)", UDim2.new(0.05, 0, 0.16, 0), Color3.fromRGB(138, 43, 226)).MouseButton1Click:Connect(function()
     local target = NameInput.Text:lower()
     for _, p in pairs(game.Players:GetPlayers()) do
@@ -86,8 +87,8 @@ createBtn("MARCAR ALVO (TAG)", UDim2.new(0.05, 0, 0.16, 0), Color3.fromRGB(138, 
     end
 end)
 
--- FUNÇÃO SUPER FLING COM GIRO
-createBtn("EXPULSAR ALVOS (SUPER SPIN)", UDim2.new(0.05, 0, 0.24, 0), Color3.fromRGB(200, 0, 0)).MouseButton1Click:Connect(function()
+-- [ NOVO SISTEMA DE FLING V9.4 ]
+createBtn("EXPULSAR ALVOS (POWER SPIN)", UDim2.new(0.05, 0, 0.24, 0), Color3.fromRGB(200, 0, 0)).MouseButton1Click:Connect(function()
     local lp = game.Players.LocalPlayer
     local char = lp.Character
     local hrp = char and char:FindFirstChild("HumanoidRootPart")
@@ -99,27 +100,23 @@ createBtn("EXPULSAR ALVOS (SUPER SPIN)", UDim2.new(0.05, 0, 0.24, 0), Color3.fro
         if p ~= lp and p.Character and p.Character:FindFirstChild("Head") and p.Character.Head:FindFirstChild("V9Tag") then
             local tHrp = p.Character:FindFirstChild("HumanoidRootPart")
             if tHrp then
-                -- Ativa o Giro Supersônico
-                local spin = Instance.new("AngularVelocity", hrp)
-                spin.MaxTorque = math.huge
-                spin.AngularVelocity = Vector3.new(0, 99999, 0)
-                spin.RelativeTo = Enum.ActuatorRelativeTo.Attachment0
-                local att = Instance.new("Attachment", hrp)
-                spin.Attachment0 = att
-
-                -- Colisão
-                hrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 1.5)
-                task.wait(0.2)
-                
-                -- Limpa o Giro
-                spin:Destroy()
-                att:Destroy()
+                -- Teleporta e Gira Brutalmente
+                for i = 1, 15 do -- 15 ciclos de giro rápido
+                    hrp.CFrame = tHrp.CFrame * CFrame.Angles(0, math.rad(i * 90), 0)
+                    hrp.Velocity = Vector3.new(10000, 10000, 10000) -- Velocidade de ejeção
+                    task.wait()
+                end
             end
         end
     end
-    hrp.CFrame = oldPos; hrp.Velocity = Vector3.new(0,0,0)
+    
+    -- Reset
+    hrp.CFrame = oldPos
+    hrp.Velocity = Vector3.new(0,0,0)
+    SyncServer()
 end)
 
+-- [ OUTRAS FUNÇÕES MANTIDAS ]
 createBtn("LIGAR RADAR ELITE", UDim2.new(0.05, 0, 0.32, 0), Color3.fromRGB(50, 50, 50)).MouseButton1Click:Connect(function()
     task.spawn(function()
         while task.wait(0.5) do
