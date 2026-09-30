@@ -269,21 +269,22 @@ end)
 task.wait(0.05)
 
 -- 4. Escudo
-local shieldBtn
-shieldBtn = makeBtn("Escudo V11: OFF", Color3.fromRGB(150, 0, 0), function()
-    state.shield = not state.shield
-    shieldBtn.Text = state.shield and "Escudo V11: ON" or "Escudo V11: OFF"
-    shieldBtn.BackgroundColor3 = state.shield and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(180, 0, 0)
-    local char = LocalPlayer.Character
+local shieldOn = false
+BypassBtn.MouseButton1Click:Connect(function()
+    shieldOn = not shieldOn
+    BypassBtn.Text = shieldOn and "ESCUDO: ATIVO" or "ESCUDO VORTEX: OFF"
+    BypassBtn.BackgroundColor3 = shieldOn and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(180, 0, 0)
+    
+    local char = game.Players.LocalPlayer.Character
     if char and char:FindFirstChild("Humanoid") then
-        char.Humanoid.BreakJointsOnDeath = not state.shield
-        char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, not state.shield)
+        char.Humanoid.BreakJointsOnDeath = not shieldOn
+        char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, not shieldOn)
     end
 end)
 
-RunService.Heartbeat:Connect(function()
-    if state.shield then
-        local char = LocalPlayer.Character
+game:GetService("RunService").Heartbeat:Connect(function()
+    if shieldOn then
+        local char = game.Players.LocalPlayer.Character
         local hum = char and char:FindFirstChild("Humanoid")
         if hum then
             if hum.Health <= 0 then hum.Health = 1 end
