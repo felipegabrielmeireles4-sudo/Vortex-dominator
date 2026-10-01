@@ -1,13 +1,17 @@
 -- ============================================
--- VORTEX DOMINATOR V11 - FUNCIONAL
+-- VORTEX DOMINATOR V11.1
+-- Escudo de dano + correções
 -- ============================================
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
+-- ============================================
+-- GUI
+-- ============================================
 local g = Instance.new("ScreenGui")
-g.Name = "V11"
+g.Name = "V11_1"
 g.ResetOnSpawn = false
 g.IgnoreGuiInset = true
 g.DisplayOrder = 999
@@ -17,9 +21,9 @@ local openBtn = Instance.new("TextButton")
 openBtn.Size = UDim2.new(0, 55, 0, 55)
 openBtn.Position = UDim2.new(0, 15, 0.4, 0)
 openBtn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-openBtn.Text = "V11"
+openBtn.Text = "V11.1"
 openBtn.TextColor3 = Color3.fromRGB(255, 215, 0)
-openBtn.TextSize = 22
+openBtn.TextSize = 16
 openBtn.Font = Enum.Font.SourceSansBold
 openBtn.BorderSizePixel = 0
 openBtn.Parent = g
@@ -59,7 +63,7 @@ task.wait(0.1)
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 45)
 title.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-title.Text = "VORTEX V11"
+title.Text = "VORTEX V11.1"
 title.TextColor3 = Color3.fromRGB(255, 215, 0)
 title.TextSize = 20
 title.Font = Enum.Font.SourceSansBold
@@ -114,6 +118,7 @@ openBtn.MouseButton1Click:Connect(function()
     openBtn.Visible = not frame.Visible
 end)
 
+-- makeBtn
 local order = 0
 local function makeBtn(text, color, callback)
     local b = Instance.new("TextButton")
@@ -134,7 +139,7 @@ local function makeBtn(text, color, callback)
     b.MouseButton1Click:Connect(function()
         if callback then
             local ok, err = pcall(callback)
-            if not ok then warn("[V11] Erro: " .. tostring(err)) end
+            if not ok then warn("[V11.1] Erro: " .. tostring(err)) end
         end
     end)
 
@@ -142,6 +147,7 @@ local function makeBtn(text, color, callback)
     return b
 end
 
+-- Input
 local input = Instance.new("TextBox")
 input.Size = UDim2.new(1, 0, 0, 40)
 input.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
@@ -160,7 +166,18 @@ cInput.Parent = input
 
 task.wait(0.1)
 
-local state = { shield = false, radar = false }
+-- ============================================
+-- VARIAVEIS
+-- ============================================
+local shieldOn = false
+local radarOn = false
+local espOn = false
+local antiTpOn = false
+
+local shieldConn = nil
+local antiTpConn = nil
+local radarConn = nil
+local antiTpPos = nil
 
 local function findPlayer(name)
     if name == "" then return nil end
@@ -173,7 +190,9 @@ local function findPlayer(name)
     return nil
 end
 
--- 1. Marcar Alvo
+-- ============================================
+-- 1. MARCAR ALVO
+-- ============================================
 makeBtn("Marcar Alvo", Color3.fromRGB(138, 43, 226), function()
     local t = findPlayer(input.Text)
     if not t or not t.Character then return end
@@ -201,7 +220,9 @@ end)
 
 task.wait(0.05)
 
--- 2. Remover Marcacao
+-- ============================================
+-- 2. REMOVER MARCACAO
+-- ============================================
 makeBtn("Remover Marcacao", Color3.fromRGB(80, 20, 80), function()
     local t = findPlayer(input.Text)
     if not t or not t.Character then return end
@@ -214,8 +235,9 @@ end)
 
 task.wait(0.05)
 
+-- ============================================
 -- 3. ESP
-local espOn = false
+-- ============================================
 local function makeESP(p)
     if p == LocalPlayer then return end
     if not p.Character then return end
@@ -268,53 +290,67 @@ end)
 
 task.wait(0.05)
 
--- 4. Escudo
-local shieldOn = false
-BypassBtn.MouseButton1Click:Connect(function()
+-- ============================================
+-- 4. ESCUDO DE DANO (cura rapida)
+-- ============================================
+local healBtn
+healBtn = makeBtn("Escudo Dano: OFF", Color3.fromRGB(180, 30, 30), function()
     shieldOn = not shieldOn
-    BypassBtn.Text = shieldOn and "ESCUDO: ATIVO" or "ESCUDO VORTEX: OFF"
-    BypassBtn.BackgroundColor3 = shieldOn and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(180, 0, 0)
-    
-    local char = game.Players.LocalPlayer.Character
-    if char and char:FindFirstChild("Humanoid") then
-        char.Humanoid.BreakJointsOnDeath = not shieldOn
-        char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, not shieldOn)
-    end
-end)
+    healBtn.Text = shieldOn and "Escudo Dano: ON" or "Escudo Dano: OFF"
+    healBtn.BackgroundColor3 = shieldOn and Color3.fromRGB(0, 200, 50) or Color3.fromRGB(180, 30, 30)
 
-game:GetService("RunService").Heartbeat:Connect(function()
     if shieldOn then
-        local char = game.Players.LocalPlayer.Character
-        local hum = char and char:FindFirstChild("Humanoid")
-        if hum then
-            if hum.Health <= 0 then hum.Health = 1 end
-            if hum.Health < 100 then hum.Health = 100 end
-            if hum:GetState() == Enum.HumanoidStateType.Dead then
-                hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+        shieldConn = RunService.RenderStepped:Connect(function()
+            if not shieldOn then return end
+            local char = LocalPlayer.Character
+            if not char then return end
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if not hum then return end
+
+            pcall(function()
+                -- Cura IMEDIATO quando vida cai
+                if hum.Health < hum.MaxHealth then
+                    hum.Health = hum.MaxHealth
+                end
+                -- Revive se morreu
+                if hum.Health <= 0 then
+                    hum.Health = hum.MaxHealth
+                end
+                -- Sai do estado Dead
+                if hum:GetState() == Enum.HumanoidStateType.Dead then
+                    hum:ChangeState(Enum.HumanoidStateType.Running)
+                end
+            end)
+
+            -- Freio de queda
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if root then
+                pcall(function()
+                    if root.AssemblyLinearVelocity.Y < -30 then
+                        root.AssemblyLinearVelocity = Vector3.new(
+                            root.AssemblyLinearVelocity.X,
+                            -30,
+                            root.AssemblyLinearVelocity.Z
+                        )
+                    end
+                end)
             end
+        end)
+        print("[V11.1] Escudo de dano ATIVADO")
+    else
+        if shieldConn then
+            shieldConn:Disconnect()
+            shieldConn = nil
         end
+        print("[V11.1] Escudo de dano DESATIVADO")
     end
 end)
 
 task.wait(0.05)
 
--- 5. Teleporte
-makeBtn("Teleporte para Alvo", Color3.fromRGB(50, 100, 200), function()
-    local t = findPlayer(input.Text)
-    if not t or not t.Character then return end
-    local tr = t.Character:FindFirstChild("HumanoidRootPart")
-    local myChar = LocalPlayer.Character
-    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-    if tr and myRoot then
-        myRoot.CFrame = tr.CFrame + Vector3.new(0, 5, 0)
-    end
-end)
-
-task.wait(0.05)
-
--- 6. Anti-TP
-local antiTpOn = false
-local antiTpPos = nil
+-- ============================================
+-- 5. ANTI-TP
+-- ============================================
 local antiTpBtn
 antiTpBtn = makeBtn("Anti-TP: OFF", Color3.fromRGB(100, 50, 150), function()
     antiTpOn = not antiTpOn
@@ -324,7 +360,8 @@ antiTpBtn = makeBtn("Anti-TP: OFF", Color3.fromRGB(100, 50, 150), function()
         local char = LocalPlayer.Character
         local r = char and char:FindFirstChild("HumanoidRootPart")
         if r then antiTpPos = r.Position end
-        RunService.Heartbeat:Connect(function()
+
+        antiTpConn = RunService.Heartbeat:Connect(function()
             if not antiTpOn then return end
             local c = LocalPlayer.Character
             if not c then return end
@@ -343,48 +380,54 @@ antiTpBtn = makeBtn("Anti-TP: OFF", Color3.fromRGB(100, 50, 150), function()
         antiTpBtn.Text = "Anti-TP: OFF"
         antiTpBtn.BackgroundColor3 = Color3.fromRGB(100, 50, 150)
         antiTpPos = nil
+        if antiTpConn then
+            antiTpConn:Disconnect()
+            antiTpConn = nil
+        end
     end
 end)
 
 task.wait(0.05)
 
--- 7. Radar
+-- ============================================
+-- 6. RADAR
+-- ============================================
 local radarBtn
 radarBtn = makeBtn("Radar: OFF", Color3.fromRGB(40, 40, 40), function()
-    state.radar = not state.radar
-    
-    if state.radar then
+    radarOn = not radarOn
+
+    if radarOn then
         radarBtn.Text = "Radar: ON"
         radarBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
-        
+
         local fastTime = {}
         local airTime = {}
         local lastSeen = {}
         local lastY = {}
-        
-        RunService.Heartbeat:Connect(function()
-            if not state.radar then return end
-            
+
+        radarConn = RunService.Heartbeat:Connect(function()
+            if not radarOn then return end
+
             for _, p in ipairs(Players:GetPlayers()) do
                 if p ~= LocalPlayer and p.Character then
                     local root = p.Character:FindFirstChild("HumanoidRootPart")
                     local hum = p.Character:FindFirstChildOfClass("Humanoid")
-                    
+
                     if root and hum then
                         local vel = root.AssemblyLinearVelocity.Magnitude
                         local velY = root.AssemblyLinearVelocity.Y
                         local onGround = hum.FloorMaterial ~= Enum.Material.Air
                         local suspect = false
-                        
+
                         if vel > 60 then suspect = true end
-                        
+
                         if not onGround then
                             airTime[p.Name] = (airTime[p.Name] or 0) + 0.03
                             if airTime[p.Name] > 2 then suspect = true end
                         else
                             airTime[p.Name] = 0
                         end
-                        
+
                         if not onGround then
                             local prevY = lastY[p.Name]
                             if prevY then
@@ -394,9 +437,9 @@ radarBtn = makeBtn("Radar: OFF", Color3.fromRGB(40, 40, 40), function()
                         else
                             lastY[p.Name] = nil
                         end
-                        
+
                         if velY > 15 and not onGround then suspect = true end
-                        
+
                         local h = p.Character:FindFirstChild("Head")
                         if h then
                             if suspect then
@@ -408,7 +451,7 @@ radarBtn = makeBtn("Radar: OFF", Color3.fromRGB(40, 40, 40), function()
                                     bb.StudsOffset = Vector3.new(0, 3.5, 0)
                                     bb.AlwaysOnTop = true
                                     bb.Parent = h
-                                    
+
                                     local lbl = Instance.new("TextLabel")
                                     lbl.Size = UDim2.new(1, 0, 1, 0)
                                     lbl.BackgroundTransparency = 1
@@ -435,7 +478,12 @@ radarBtn = makeBtn("Radar: OFF", Color3.fromRGB(40, 40, 40), function()
     else
         radarBtn.Text = "Radar: OFF"
         radarBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        
+
+        if radarConn then
+            radarConn:Disconnect()
+            radarConn = nil
+        end
+
         for _, p in ipairs(Players:GetPlayers()) do
             if p.Character then
                 local h = p.Character:FindFirstChild("Head")
@@ -450,14 +498,45 @@ end)
 
 task.wait(0.05)
 
--- 8. PARAR TUDO
+-- ============================================
+-- 7. PARAR TUDO
+-- ============================================
 makeBtn("PARAR TUDO", Color3.fromRGB(200, 30, 30), function()
-    state.shield = false
-    state.radar = false
+    -- Escudo de dano
+    shieldOn = false
+    healBtn.Text = "Escudo Dano: OFF"
+    healBtn.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
+    if shieldConn then
+        shieldConn:Disconnect()
+        shieldConn = nil
+    end
+
+    -- Radar
+    radarOn = false
+    radarBtn.Text = "Radar: OFF"
+    radarBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    if radarConn then
+        radarConn:Disconnect()
+        radarConn = nil
+    end
+
+    -- Anti-TP
     antiTpOn = false
-    espOn = false
+    antiTpBtn.Text = "Anti-TP: OFF"
+    antiTpBtn.BackgroundColor3 = Color3.fromRGB(100, 50, 150)
     antiTpPos = nil
+    if antiTpConn then
+        antiTpConn:Disconnect()
+        antiTpConn = nil
+    end
+
+    -- ESP
+    espOn = false
+    espBtn.Text = "ESP: OFF"
+    espBtn.BackgroundColor3 = Color3.fromRGB(150, 100, 50)
     removeAllESP()
+
+    -- Tags do radar
     for _, p in ipairs(Players:GetPlayers()) do
         if p.Character then
             local h = p.Character:FindFirstChild("Head")
@@ -467,15 +546,19 @@ makeBtn("PARAR TUDO", Color3.fromRGB(200, 30, 30), function()
             end
         end
     end
+
+    print("[V11.1] Tudo parado!")
 end)
 
 task.wait(0.05)
 
--- 9. Invincible Fly
+-- ============================================
+-- 8. INVINCIBLE FLY
+-- ============================================
 makeBtn("Invincible Fly", Color3.fromRGB(50, 100, 200), function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/giobolqv1/invincible-characters-animations-by-GioBolqv1-/refs/heads/main/universal.lua"))()
 end)
 
 scroll.CanvasSize = UDim2.new(0, 0, 0, order * 48 + 20)
 
-print("[V11] Carregado!")
+print("[V11.1] Carregado com sucesso!")
