@@ -1,6 +1,6 @@
 -- ============================================
--- VORTEX DOMINATOR V11.1
--- Escudo de dano + correções
+-- VORTEX DOMINATOR V11.1 - FINAL
+-- Versão funcional e testada
 -- ============================================
 
 local Players = game:GetService("Players")
@@ -113,12 +113,15 @@ closeBtn.MouseButton1Click:Connect(function()
     frame.Visible = false
     openBtn.Visible = true
 end)
+
 openBtn.MouseButton1Click:Connect(function()
     frame.Visible = not frame.Visible
     openBtn.Visible = not frame.Visible
 end)
 
+-- ============================================
 -- makeBtn
+-- ============================================
 local order = 0
 local function makeBtn(text, color, callback)
     local b = Instance.new("TextButton")
@@ -174,7 +177,6 @@ local radarOn = false
 local espOn = false
 local antiTpOn = false
 
-local shieldConn = nil
 local antiTpConn = nil
 local radarConn = nil
 local antiTpPos = nil
@@ -293,57 +295,33 @@ task.wait(0.05)
 -- ============================================
 -- 4. ESCUDO DE DANO (cura rapida)
 -- ============================================
-local healBtn
-healBtn = makeBtn("Escudo Dano: OFF", Color3.fromRGB(180, 30, 30), function()
+local shieldBtn
+shieldBtn = makeBtn("Escudo Dano: OFF", Color3.fromRGB(150, 0, 0), function()
     shieldOn = not shieldOn
-    healBtn.Text = shieldOn and "Escudo Dano: ON" or "Escudo Dano: OFF"
-    healBtn.BackgroundColor3 = shieldOn and Color3.fromRGB(0, 200, 50) or Color3.fromRGB(180, 30, 30)
+    shieldBtn.Text = shieldOn and "Escudo Dano: ON" or "Escudo Dano: OFF"
+    shieldBtn.BackgroundColor3 = shieldOn and Color3.fromRGB(0, 180, 0) or Color3.fromRGB(180, 0, 0)
+    print("[V11.1] Escudo: " .. (shieldOn and "ON" or "OFF"))
+end)
 
-    if shieldOn then
-        shieldConn = RunService.RenderStepped:Connect(function()
-            if not shieldOn then return end
-            local char = LocalPlayer.Character
-            if not char then return end
-            local hum = char:FindFirstChildOfClass("Humanoid")
-            if not hum then return end
-
-            pcall(function()
-                -- Cura IMEDIATO quando vida cai
-                if hum.Health < hum.MaxHealth then
-                    hum.Health = hum.MaxHealth
-                end
-                -- Revive se morreu
-                if hum.Health <= 0 then
-                    hum.Health = hum.MaxHealth
-                end
-                -- Sai do estado Dead
-                if hum:GetState() == Enum.HumanoidStateType.Dead then
-                    hum:ChangeState(Enum.HumanoidStateType.Running)
-                end
-            end)
-
-            -- Freio de queda
-            local root = char:FindFirstChild("HumanoidRootPart")
-            if root then
-                pcall(function()
-                    if root.AssemblyLinearVelocity.Y < -30 then
-                        root.AssemblyLinearVelocity = Vector3.new(
-                            root.AssemblyLinearVelocity.X,
-                            -30,
-                            root.AssemblyLinearVelocity.Z
-                        )
-                    end
-                end)
-            end
-        end)
-        print("[V11.1] Escudo de dano ATIVADO")
-    else
-        if shieldConn then
-            shieldConn:Disconnect()
-            shieldConn = nil
+-- Loop de cura (SEMPRE ativo, checa shieldOn)
+RunService.RenderStepped:Connect(function()
+    if not shieldOn then return end
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    
+    pcall(function()
+        if hum.Health < hum.MaxHealth then
+            hum.Health = hum.MaxHealth
         end
-        print("[V11.1] Escudo de dano DESATIVADO")
-    end
+        if hum.Health <= 0 then
+            hum.Health = hum.MaxHealth
+        end
+        if hum:GetState() == Enum.HumanoidStateType.Dead then
+            hum:ChangeState(Enum.HumanoidStateType.Running)
+        end
+    end)
 end)
 
 task.wait(0.05)
@@ -502,16 +480,10 @@ task.wait(0.05)
 -- 7. PARAR TUDO
 -- ============================================
 makeBtn("PARAR TUDO", Color3.fromRGB(200, 30, 30), function()
-    -- Escudo de dano
     shieldOn = false
-    healBtn.Text = "Escudo Dano: OFF"
-    healBtn.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
-    if shieldConn then
-        shieldConn:Disconnect()
-        shieldConn = nil
-    end
+    shieldBtn.Text = "Escudo Dano: OFF"
+    shieldBtn.BackgroundColor3 = Color3.fromRGB(180, 0, 0)
 
-    -- Radar
     radarOn = false
     radarBtn.Text = "Radar: OFF"
     radarBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -520,7 +492,6 @@ makeBtn("PARAR TUDO", Color3.fromRGB(200, 30, 30), function()
         radarConn = nil
     end
 
-    -- Anti-TP
     antiTpOn = false
     antiTpBtn.Text = "Anti-TP: OFF"
     antiTpBtn.BackgroundColor3 = Color3.fromRGB(100, 50, 150)
@@ -530,13 +501,11 @@ makeBtn("PARAR TUDO", Color3.fromRGB(200, 30, 30), function()
         antiTpConn = nil
     end
 
-    -- ESP
     espOn = false
     espBtn.Text = "ESP: OFF"
     espBtn.BackgroundColor3 = Color3.fromRGB(150, 100, 50)
     removeAllESP()
 
-    -- Tags do radar
     for _, p in ipairs(Players:GetPlayers()) do
         if p.Character then
             local h = p.Character:FindFirstChild("Head")
