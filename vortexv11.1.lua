@@ -1,6 +1,6 @@
 -- ============================================
--- VORTEX DOMINATOR V11.1
--- Escudo de dano + correções
+-- VORTEX DOMINATOR V11.1 - FINAL
+-- Super Ring V5 + Radar corrigido
 -- ============================================
 
 local Players = game:GetService("Players")
@@ -113,12 +113,15 @@ closeBtn.MouseButton1Click:Connect(function()
     frame.Visible = false
     openBtn.Visible = true
 end)
+
 openBtn.MouseButton1Click:Connect(function()
     frame.Visible = not frame.Visible
     openBtn.Visible = not frame.Visible
 end)
 
+-- ============================================
 -- makeBtn
+-- ============================================
 local order = 0
 local function makeBtn(text, color, callback)
     local b = Instance.new("TextButton")
@@ -169,12 +172,10 @@ task.wait(0.1)
 -- ============================================
 -- VARIAVEIS
 -- ============================================
-local shieldOn = false
 local radarOn = false
 local espOn = false
 local antiTpOn = false
 
-local shieldConn = nil
 local antiTpConn = nil
 local radarConn = nil
 local antiTpPos = nil
@@ -291,59 +292,10 @@ end)
 task.wait(0.05)
 
 -- ============================================
--- 4. ESCUDO DE DANO (cura rapida)
+-- 4. SUPER RING V5
 -- ============================================
-local healBtn
-healBtn = makeBtn("Escudo Dano: OFF", Color3.fromRGB(180, 30, 30), function()
-    shieldOn = not shieldOn
-    healBtn.Text = shieldOn and "Escudo Dano: ON" or "Escudo Dano: OFF"
-    healBtn.BackgroundColor3 = shieldOn and Color3.fromRGB(0, 200, 50) or Color3.fromRGB(180, 30, 30)
-
-    if shieldOn then
-        shieldConn = RunService.RenderStepped:Connect(function()
-            if not shieldOn then return end
-            local char = LocalPlayer.Character
-            if not char then return end
-            local hum = char:FindFirstChildOfClass("Humanoid")
-            if not hum then return end
-
-            pcall(function()
-                -- Cura IMEDIATO quando vida cai
-                if hum.Health < hum.MaxHealth then
-                    hum.Health = hum.MaxHealth
-                end
-                -- Revive se morreu
-                if hum.Health <= 0 then
-                    hum.Health = hum.MaxHealth
-                end
-                -- Sai do estado Dead
-                if hum:GetState() == Enum.HumanoidStateType.Dead then
-                    hum:ChangeState(Enum.HumanoidStateType.Running)
-                end
-            end)
-
-            -- Freio de queda
-            local root = char:FindFirstChild("HumanoidRootPart")
-            if root then
-                pcall(function()
-                    if root.AssemblyLinearVelocity.Y < -30 then
-                        root.AssemblyLinearVelocity = Vector3.new(
-                            root.AssemblyLinearVelocity.X,
-                            -30,
-                            root.AssemblyLinearVelocity.Z
-                        )
-                    end
-                end)
-            end
-        end)
-        print("[V11.1] Escudo de dano ATIVADO")
-    else
-        if shieldConn then
-            shieldConn:Disconnect()
-            shieldConn = nil
-        end
-        print("[V11.1] Escudo de dano DESATIVADO")
-    end
+makeBtn("Super Ring V5", Color3.fromRGB(50, 150, 200), function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Lukashub-coder/Super-ring-V5/refs/heads/main/By%20lukas!!"))()
 end)
 
 task.wait(0.05)
@@ -390,7 +342,7 @@ end)
 task.wait(0.05)
 
 -- ============================================
--- 6. RADAR
+-- 6. RADAR (CORRIGIDO - so pega quem voa)
 -- ============================================
 local radarBtn
 radarBtn = makeBtn("Radar: OFF", Color3.fromRGB(40, 40, 40), function()
@@ -400,10 +352,7 @@ radarBtn = makeBtn("Radar: OFF", Color3.fromRGB(40, 40, 40), function()
         radarBtn.Text = "Radar: ON"
         radarBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
 
-        local fastTime = {}
-        local airTime = {}
         local lastSeen = {}
-        local lastY = {}
 
         radarConn = RunService.Heartbeat:Connect(function()
             if not radarOn then return end
@@ -419,27 +368,31 @@ radarBtn = makeBtn("Radar: OFF", Color3.fromRGB(40, 40, 40), function()
                         local onGround = hum.FloorMaterial ~= Enum.Material.Air
                         local suspect = false
 
-                        if vel > 60 then suspect = true end
-
-                        if not onGround then
-                            airTime[p.Name] = (airTime[p.Name] or 0) + 0.03
-                            if airTime[p.Name] > 2 then suspect = true end
-                        else
-                            airTime[p.Name] = 0
+                        -- 🎯 REGRA 1: Velocidade MUITO alta (> 80)
+                        if vel > 80 then
+                            suspect = true
                         end
 
-                        if not onGround then
-                            local prevY = lastY[p.Name]
-                            if prevY then
-                                if math.abs(velY) < 5 and vel > 5 then suspect = true end
-                            end
-                            lastY[p.Name] = root.Position.Y
-                        else
-                            lastY[p.Name] = nil
+                        -- 🎯 REGRA 2: Velocidade horizontal alta no ar (> 55)
+                        local velHorizontal = Vector3.new(
+                            root.AssemblyLinearVelocity.X,
+                            0,
+                            root.AssemblyLinearVelocity.Z
+                        ).Magnitude
+
+                        if velHorizontal > 55 and not onGround then
+                            suspect = true
                         end
 
-                        if velY > 15 and not onGround then suspect = true end
+                        -- 🎯 REGRA 3: Subindo no ar (> 20)
+                        if velY > 20 and not onGround then
+                            suspect = true
+                        end
 
+                        -- 🎯 REGRA 4: Flutuando (Y quase 0 no ar por muito tempo)
+                        -- (removida - causava falso positivo)
+
+                        -- 🎯 Aplicar tag
                         local h = p.Character:FindFirstChild("Head")
                         if h then
                             if suspect then
@@ -502,16 +455,6 @@ task.wait(0.05)
 -- 7. PARAR TUDO
 -- ============================================
 makeBtn("PARAR TUDO", Color3.fromRGB(200, 30, 30), function()
-    -- Escudo de dano
-    shieldOn = false
-    healBtn.Text = "Escudo Dano: OFF"
-    healBtn.BackgroundColor3 = Color3.fromRGB(180, 30, 30)
-    if shieldConn then
-        shieldConn:Disconnect()
-        shieldConn = nil
-    end
-
-    -- Radar
     radarOn = false
     radarBtn.Text = "Radar: OFF"
     radarBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
@@ -520,7 +463,6 @@ makeBtn("PARAR TUDO", Color3.fromRGB(200, 30, 30), function()
         radarConn = nil
     end
 
-    -- Anti-TP
     antiTpOn = false
     antiTpBtn.Text = "Anti-TP: OFF"
     antiTpBtn.BackgroundColor3 = Color3.fromRGB(100, 50, 150)
@@ -530,13 +472,11 @@ makeBtn("PARAR TUDO", Color3.fromRGB(200, 30, 30), function()
         antiTpConn = nil
     end
 
-    -- ESP
     espOn = false
     espBtn.Text = "ESP: OFF"
     espBtn.BackgroundColor3 = Color3.fromRGB(150, 100, 50)
     removeAllESP()
 
-    -- Tags do radar
     for _, p in ipairs(Players:GetPlayers()) do
         if p.Character then
             local h = p.Character:FindFirstChild("Head")
